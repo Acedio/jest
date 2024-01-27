@@ -8,6 +8,8 @@ kinganim = {}
 state = "choose"
 cutscene_state = {}
 ball_state = {}
+time = 0
+time += 1
 
 function _init()
  music(2)

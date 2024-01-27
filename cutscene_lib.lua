@@ -3,24 +3,24 @@
 -- draw and pop up the message box
 function cutscene_draw(s)
     cls()
+    map()
    if s.new_scene then
-    rectfill(2,2,mid(2,s.message_box_frame*6,126),2,13)
+    rectfill(2,2,mid(2,s.message_box_frame*6,126),2,2)
     rect(2,2,mid(2,s.message_box_frame*6,126),2,6)
     if s.message_box_frame > 21 then
-        rectfill(2,2,126,mid(2,(s.message_box_frame-21)*3,64),13)
+        rectfill(2,2,126,mid(2,(s.message_box_frame-21)*3,64),2)
         rect(2,2,126,mid(2,(s.message_box_frame-21)*3,64),6)
     end
    else
-    cls()
-    rectfill(2,2,126,64,13)
+    rectfill(2,2,126,64,2)
     rect(2,2,126,64,6)
     local new_string = sub(s.messages[dialog_i].message,1,mid(1,(s.message_box_frame)*0.8,#s.messages[dialog_i].message))
     dshad(new_string,5,5,10)
    end
    if s.messages[dialog_i].speaker == "king" then
-    draw_king()
+    draw_king(s)
    elseif s.messages[dialog_i].speaker == "mc" then
-    draw_mc()
+    draw_mc(s)
    end
 end
 
@@ -83,16 +83,28 @@ end
 
 
 -- draw the king
-function draw_king()
--- will need to change king sprites in final
- spr(7,84,36,6,4)
- spr(69,68,68,8,4)
+function draw_king(s)
+    palt(0x0010)
+    spr(140,102,48,4,4) --back
+    spr(200,70,80,8,4) --legs
+    spr(136,92,61,4,3) --head
+    if band(s.message_box_frame\10, 1) == 1 then
+        spr(184,92,77,2,1) -- mouth closed
+        spr(186,69,89,2,1) -- breathing
+    else
+        spr(168,92,77,2,1) -- mouth open
+    end
 end
-
 -- draw the main character
-function draw_mc()
--- will need to change sprites in final
- spr(1,2,36,4,4)
+function draw_mc(s)
+    palt(0x0010)
+    if band(s.message_box_frame\10, 1) == 1 then
+        spr(128,2,48,4,4,true) --body
+        spr(192,2,80,4,4,true) --legs
+    else
+        spr(132,2,48,4,4,true) --body
+        spr(196,2,80,4,4,true) --legs
+    end
 end
 
 -- drop shadow
