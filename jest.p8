@@ -1,42 +1,15 @@
 pico-8 cartridge // http://www.pico-8.com
 version 41
 __lua__
-ball = {}
-pad = {}
-blocks = {}
-parts = {}
-shake = {}
+#include game_lib.lua
+#include cutscene_lib.lua
 
 kinganim = {}
+state = "choose"
+cutscene_state = {}
+ball_state = {}
 
 function _init()
-	ball = {
-	 box = bbox:new{x = 1, y = 1, w=8, h=8},
-	 vel = {x = 2, y = 2},
-	}
-	
-	pad = {
-	 box = bbox:new{x=44, y=8*13, w=24, h=8},
-	}
-	
-	blocks = {}
-	
- for y=0,13 do
-  blocks[y] = {}
-  for x=0,13 do
-   if y < 13 and y%3==1 and band(x,1)==0 then
-    blocks[y][x] = 1
-   else
-    blocks[y][x] = 0
-   end
-  end
- end
- 
- shake = {
-  pos={x=0,y=0},
-  vel={x=3,y=3},
- }
- 
  kinganim = anim:new{
   frame:new{
    sprn=16,
@@ -53,274 +26,38 @@ function _init()
  }
 end
 
-function shakeshack()
- local a = rnd()
- shake.vel.x = 3*cos(a)
- shake.vel.y = 3*sin(a)
-end
-
-function updateshake() 
- shake.pos.x += shake.vel.x
- shake.pos.y += shake.vel.y
- if l != 0 then
-	 nx = shake.pos.x
-	 ny = shake.pos.y
-	 ax = -nx/2
-	 ay = -ny/2
-	 shake.vel.x += ax
-	 shake.vel.y += ay
-	 shake.vel.x *= 0.8
-	 shake.vel.y *= 0.8
-	 if abs(ax) < 2 and abs(ay) < 2 and sqrt(shake.vel.x^2+shake.vel.y^2) < 0.2 then
-	  shake.vel.x = 0
-	  shake.vel.y = 0
-	  shake.pos.x = 0
-	  shake.pos.y = 0
-	 end
-	end
-end
-
-function throwparts(pos)
- for i=1,3 do
-  add(parts, {
-   box={
-	   x=pos.x,
- 	  y=pos.y,
- 	 },
-   vel={
-    x=rnd(2)-1,
-    y=rnd(2)-1,
-   },
-   ttl=20,
-  })
- end
-end
-
-function updateparts()
- local dead = 0
- for i=1,#parts do
-  local c = i-dead
-  parts[c].box.x += parts[c].vel.x
-  parts[c].box.y += parts[c].vel.y
-  parts[c].ttl -= 1
-  if parts[c].ttl <= 0 then
-   deli(parts,c)
-   dead += 1
-  end
- end
-end
-
-function bordercol()
- x = 0
- y = 0
- if ball.box.x < 0 then
-  x = -ball.box.x
- elseif ball.box.x >= 13*8 then
-  x = 13*8-ball.box.x
- end
- 
- if ball.box.y < 0 then
-  y = -ball.box.y
- end
- 
- if x == 0 and y == 0 then
-  return nil
- end
- 
- return {x=x, y=y}
-end
-
-function padcol()
- if rectcol(ball.box,pad.box) then
-  return {y=pad.box.y - (ball.box.y+8)}
- else
-  return nil
- end
-end
-
-function setblock(x,y,v)
- if blocks[y] then
-  blocks[y][x] = v
- end
-end 
-
-function block(x,y)
- if blocks[y] then
-  local ret = {
-   coords = {y=y},
-   box = bbox:new{y=y*8,w=16,h=8},
-  }
-  local b = blocks[y][x]
-  if b and b != 0 then
-   ret.box.x = x*8
-   ret.coords.x = x
-   return ret
-  end
-  b = blocks[y][x-1]
-  if b and b != 0 then
-   ret.box.x = (x-1)*8
-   ret.coords.x = x-1
-   return ret
-  end
- end
- return nil
-end
-
-function pickblock(pos)
- if pos.x < 0 or pos.x >= 14*8 or
-    pos.y < 0 or pos.y >= 14*8 then
-  return nil
- end
- return block(pos.x\8,pos.y\8)
-end
-
---  first check x axis movement,
---then y
---  if we're moving left, only
---need to check left edge of ball.
---  can maybe subdivide motion if
---we're crossing a lot of axes
---and might cut/get stuck on corners
-
-function colmap(box)
- local cols = {}
- for b in all({
-  pickblock(box:ur()),
-  pickblock(box:ul()),
-  pickblock(box:dr()),
-  pickblock(box:dl())
- }) do
-  if b and rectcol(box,b.box) then
-   add(cols,b)
-  end
- end
- return cols
-end
-
-function moveball()
- local ret = {}
- 
- ball.box.x += ball.vel.x
- local cols = colmap(ball.box)
- if #cols > 0 then
-	 if ball.vel.x > 0 then
-	  local left = ball.box:r()
-	  for c in all(cols) do
-	   if c.box.x < left then
-	    left = c.box.x
-	    col = c
-	   end
-	  end
-	  ball.box.x = left - ball.box.w
-	 else
-	  local right = ball.box:l()
-	  for c in all(cols) do
-	   if c.box:r() > right then
-	    right = c.box:r()
-	    col = c
-	   end
-	  end
-	  ball.box.x = right
-	 end
-	 add(ret,col)
-	 sfx(3)
-	 shakeshack()
-	 throwparts(col.box:center())
-  ball.vel.x = -ball.vel.x
-	end
-
-	ball.box.y += ball.vel.y
- local cols = colmap(ball.box)
- if #cols > 0 then
-  local col = nil
-	 if ball.vel.y > 0 then
-	  local top = ball.box:d()
-	  for c in all(cols) do
-	   if c.box.y < top then
-	    top = c.box.y
-	    col = c
-	   end
-	  end
-	  ball.box.y = top - ball.box.h
-	 else
-	  local bot = ball.box:u()
-	  for c in all(cols) do
-	   if c.box:d() > bot then
-	    bot = c.box:d()
-	    col = c
-	   end
-	  end
-	  ball.box.y = bot
-	 end
-	 add(ret, col)
-	 sfx(3)
-	 throwparts(col.box:center())
-	 shakeshack()
-	 ball.vel.y = -ball.vel.y
-	end
-	
-	return ret
-end
-
 function _update()
- local cols = moveball()
- for col in all(cols) do
-  setblock(col.coords.x, col.coords.y, 0)
- end
-
- local c = bordercol()
- if c then
-  sfx(0)
-	 if c.x != 0 then
-	  ball.box.x += c.x
-	  ball.vel.x = -ball.vel.x
-	 end
-	 if c.y != 0 then
-	  ball.box.y += c.y
-	  ball.vel.y = -ball.vel.y
-	 end
-	end
- c = padcol()
- if c then
-  sfx(1)
-  ball.box.y += c.y
-  ball.vel.y = -ball.vel.y
- end
- 
- local b = btn()
- if band(b,0x1) > 0 then pad.box.x -= 3 end
- if band(b,0x2) > 0 then pad.box.x += 3 end
- for y=0,13 do
-  for x=0,13 do
-   if blocks[y][x]==1 then
-    --mset(x+1,y+1,1)
-   elseif blocks[y][x-1]==1 then
-    --mset(x+1,y+1,2)
-   else
-    --mset(x+1,y+1,0)
+ if state == "choose" then
+   kinganim:update()
+   --check buttons, update state
+   if btn(❎) then
+     state = "game"
+     ball_state = ball_init()
+   elseif btn(🅾️) then
+     state = "cutscene"
+     cutscene_state = intro_init()
    end
-  end
+ elseif state == "game" then
+   ball_update(ball_state)
+ elseif state == "cutscene" then
+   cutscene_update(cutscene_state)
+ else
+   -- die
  end
- 
- updateshake()
- updateparts()
- kinganim:update()
 end
 
 function _draw()
   cls()
-  --(shake.pos.x,shake.pos.y)
-  map()
-  spr(11,ball.box.x+8,ball.box.y+8)
-  spr(8,pad.box.x+8,pad.box.y+8,3,1)
-  for i=1,#parts do
-   if parts[i].ttl > 10 or band(parts[i].ttl, 1)==1 then
-    spr(12,parts[i].box.x+8,parts[i].box.y+8)
-   end
+  if state == "choose" then
+    map()
+    kinganim:draw(10, 10)
+  elseif state == "game" then
+    ball_draw(ball_state)
+  elseif state == "cutscene" then
+    cutscene(cutscene_state)
+  else
+    -- die
   end
-  
-  kinganim:draw(pad.box.x+8,pad.box.y, true)
-  --spr(16,pad.box.x+8,pad.box.y,2,2)
 end
 -->8
 bbox = {}
@@ -462,38 +199,38 @@ function anim:update()
  end
 end
 __gfx__
-0000000077777777777777aa002200220022076555555555567220022200220000777777777777777777770000777700000aa000000000000000000000000000
-000000007aaaa77aaa7aaaa902200220022007656666666656720022022002200766666666666666666666700766666000a7a900000000000000000000000000
-007007007aaa777aa7aaaaa92200220022002765777777775670022000220022766555555555555555555567766557760a7aaa90000000000000000000000000
-000770007aa777aa7aaaaaa9200220022002276500220022567022002002200276555555555555555555555776555576aaaaaaa9000000000000000000000000
-000770007a777aa7aaaaaaa9002200220022076520022002567220022200220076555555555555555555555776555556aaaaaaa9000000000000000000000000
-007007007aa7aa7aaaaaaaa902200220022007652200220056720022777777777655555555555555555555577655555609aaaa90000000000000000000000000
-000000007aaaaaaaaaaaaaa9220022002200276502200220567002206666666607655555555555555555556007655560009aa900000000000000000000000000
-00000000aa9999999999999920022002200227650022002256702200555555550066666666666666666666000076660000099000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000aa02220000000000aa022200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000fff0222000000000fff022200000000000000000000000777777000000000000000000000000000000000000000000000000000000000000000000000
-0000000f0ff222000000000f0ff22200000000000000000000000700007000000000000000000000000000000000000000000000000000000000000000000000
-000000f4fff22200000000f4fff22200000000000000000000000700007000000000000000000000000000000000000000000000000000000000000000000000
-00000f55ff2220000000088a88222000000000000000000007000777077000070000000000000000000000000000000000000000000000000000000000000000
-0000088a88822000000000fff8822000000000000000000007700007770000700000000000000000000000000000000000000000000000000000000000000000
-000000fff88220000000ffffff822000000d6777766d000000777000000007700000000000000000000000000000000000000000000000000000000000000000
-0000ffffff882000000fffffff8820000066777777776d0000000770000077000000000000000000000000000000000000000000000000000000000000000000
-000fffffff882000000fffffff882000067777777777760000000077777700000000000000000000000000000000000000000000000000000000000000000000
-0003333ffff880000003333ffff88000677766ddd667776d00000000000000000000000000000000000000000000000000000000000000000000000000000000
-0055333333288800005533333328880077765000005d677600007777777700000000000000000000000000000000000000000000000000000000000000000000
-00223355322888000022335532288800776000000000677700077000000777000000000000000000000000000000000000000000000000000000000000000000
-00222222222200000022222222220000760000000000d77700770000000007700000000000000000000000000000000000000000000000000000000000000000
-002222222220000000222222222000007d0000000000677707700000000000700000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000700000000000677600000000000000700000000000000000000000000000000000000000000000000000000000000000
-0000000000000567776d000000000d77700000000000677600000000000000000000000000000000000000000000000000000000000000000000000000000000
-000000000000000677766000000005777d0000000006777d00000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000000000667776d000000067760000000066776000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000d677776d00000d7776000000667765000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000056777776d000067766000d6777650000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000d67777776d55677766677776000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000000000000000d677777777777777777765000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-000000000000000000000000d677777777777777776d500000000000000000000000000000005ddddd6dd0000000000000000000000000000000000000000000
+bbbbbbbbaab111bbbbbbbbbbaab111bbbbbbbbbbaab111bbbbb0bbbbbaab111bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbf00bbbbbb
+bbbbbbbfffb111bbbbbbbbbfffb111bbbbbbbbbfffb111bbbbbb0bbbfffb111bbbbbbbb9bbbbbbbbbbbbbbbb9bbbbbbbbbbbbbbf00bbbbbbbbbbbbbff0bbbbbb
+bbbbbb0f0ff111bbbbbbbb0f0ff111bbbbbbbb0f0ff111bbbbbbbbb0f0ff111bbbbbbb999bbbbbbbbbbbbbbb99bbbbbbbbbbbbbff0bbbfbbbbbfbbbff0bbbbbb
+bbbbbbf4fff111bbbbbbbbf4fff111bbbbbbbbf4fff111bbbb00bbbf4fff111bbbbbbb999bbbbbbbbbbbbbb999bbbbbbbbbbbbbff0bbfbbbbbbbfbbfffbbbfbb
+bbbbbf000f111bbbbbbbbf000f111bbbbbbbbf000f111bbbbbbbbbf000f111bbbbbbbbb999bbbbbbbbbbbb999bbbbbbbbbbfbbbfffbbfbbbbbbbfbbbfbbbfbbb
+bbbbbbffff111bbbbbbbbbffff111bbbbbbbbbffff111bbbbbbb0bbfeef111bbbbbbbbb9a9bbbbbbbbbbbb9a9bbbbbbbbbbbfbbbfb66bbbbbbbbb66616bbfbbb
+bbbbb88a88811bbbbbbbb88a88811bbbbbbbb88a88811bbbbbb0bb88a88811bbbbbbbbbaabbbbbbbbbbbbbbaabbbbbbbbbbbfbb616bbbbbbbbbbbbb61666bbbb
+bbbbbbeeef811bbbbbbbbbeeff811bbbbbbbbbeeef811bbbbbbbbbbeeef811bbbbbbbbb44bbbbbbbbbbbbbb44bbbbbbbbbbbb66616bbbbbbbbbbbbb666bbbbbb
+bbbbeeeeff881bbbbbbbbeeeef881bbbbbbbeeeeff881bbbbbbbbeeeeff881bbbbbbbbb44bbbbbbbbbbbbbb44bbbbbbbbbbbbbb666bbbbbbbbbbbbb666bbbbbb
+bbbffffeee881bbbbbbbfffeee881bbbbbbffffeee881bbbbbbbffffeee881bbbbbbbbb44bbbbbbbbbbbbbb44bbbbbbbbbbbbbb666bbbbbbbbbbbbb666bbbbbb
+bbb3333fff888bbbbbbb333fff888bbbbbb3333fff888bbbbbbb3333fff888bbbbbb00044000bbbbbbbb00044000bbbbbbbbbb0500bbbbbbbbbbbb0500bbbbbb
+bb553333331888bbbb553333331888bbbb553333331888bbbbb553333331888bbbb0555445550bbbbbb0555445550bbbbbbbb052220bbbbbbbbbb052220bbbbb
+bb113355311888bbbb113355311888bbbb113355311888bbbbb113355311888bbbb0555555550bbbbbb0555555550bbbbbbbb052220bbbbbbbbbb020220bbbbb
+bb1111111111bbbbbb1111111111bbbbbb1111111111bbbbbbb1111111111bbbbbbb05555550bbbbbbbb05555550bbbbbbbbb020220bbbbbbbbbb022220bbbbb
+bb111111111bbbbbbb111111111bbbbbbb111111111bbbbbbbb111111111bbbbbbbbb000000bbbbbbbbbb000000bbbbbbbbbb022220bbbbbbbbbb022220bbbbb
+bb0bbbbbbb0bbbbbbb0bbbbbbb0bbbbbbb0bbbbbbb0bbbbbbbb0bbbbbbb0bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb0000bbbbbbbbbbbb0000bbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbb000bbbbbbbbbbbb4444bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb0bb0bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb666bbbbb
+bbbbb00b2b00bbbbbbbbb666666bbbbbbbbbbbbbbbbbbbbbbbbbbbbb09bbbbbbbbb0bbb0bbb0bbbbbbbbbbbbbbbbbbbbbbbbbb00000bbbbbbbbbb666bbb6bbbb
+bbbb0bbbbbbb0bbbbbbbbb6446bbbbbbbbbbbbbbbbbbbbbbbbbbbbb0bbbbbbbbbbb0bb0bbbb0bbbbbbbb1111111bbbbbbbbbb0555550bbbbbbbbbbbbbbbb6bbb
+bbb0bbbbbbbbb0bbbbbbbb6446bbbbbbbbb000bbbb000bbbbbbbbb000bbbbbbbbbbb0b0bbb0bbbbbbbb166666661bbbbbbbb055555550bbbbbbbbbbbbbbb6bbb
+bbb44444444444bbbbbbbb6cc6bbbbbbbb0ddd0000ddd0bbbbbbbb050bbbbbbbbbbb0bb0bb0bbbbbbbb163333361bbbbbbb05555555550bbbbbbbbbbbbb656bb
+bbb49999999994bbbbbbb6cccc6bbbbbbb0d0ddddddbd0bbbbbbb00000bbbbbbbbb0bb040bbbbbbbbbb16bbbbb61bbbbbb0555555555550bbbbbbbbbbb6665bb
+bbb499999aa994bbbbbb6c7cccc6bbbbb0d000dddd8dad0bbbbb0555550bbbbbbbbbb04440bbbbbbbbb16bbbbb61bbbbbb0555556555550bbbbb6b6bbb5666bb
+bbb49999fff994bbbbb6c7cccccc6bbbb0dd0ddddddcdd0bbbb075555550bbbbbbbb0444440bbbbbbbb166666661bbbbbb0555566655550bbbb5555bb6656bbb
+bbb49990f0ff94bbbbb6c7cccccc6bbbb0dddd0000dddd0bbbb055555550bbbbbbbbb04440bbbbbbbbb160666661bbbbbb0555776555550bbbb6565b566656bb
+bbb4999f4fff94bbbb6c7cccccccc6bb0ddddd0bb0ddddd0bbb075555550bbbbbbbb0444440bbbbbbbb100066861bbbbbb0557775555550bbbb55556656bbbbb
+bbb499f000f994bbbb6c7cccccccc6bb0dddd0bbbb0dddd0bbb075555550bbbbbbb044444440bbbbbbb160668661bbbbbbb07777555550bbbbbb666666b6bbbb
+bbb4999ffff994bbbb6c7cccccccc6bbb0dd0bbbbbb0dd0bbbb055555550bbbbbbb044444440bbbbbbb166666661bbbbbbbb077555550bbbbbbbbb66b6bbbbbb
+bbb49999999994bbbbb6cccccccc6bbbbb00bbbbbbbb00bbbbbb0555550bbbbbbbbb0000000bbbbbbbbb1111111bbbbbbbbbb0755550bbbbbbbb66bb6bbbbbbb
+bbb44444444444bbbbbb6cccccc6bbbbbbbbbbbbbbbbbbbbbbbbb00000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb00000bbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbb666666bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 ddd6666666666ddd5dddddddddddddddddddddddddddddd5333373333333733388888888888888883333933444dddddddddddd44433933339cccddddddddccca
 ddddddd66ddddddd65dddddddddddddddddddddddddddd563333f3333333f33388888888888888883f93344ddd100000000001ddd44339f39cccccc76cccccca
 ddddddd66dddddddd65ddddddddddd6666ddddddddddd56db3373333e3373333888888888888888839944dd100000000000000001dd4499359cccc7666cccca5
@@ -526,6 +263,70 @@ eeeeeeeeeeeeeeeaaeeeeeeeeeeeeeef111dd33333dd11111111dd33333dd1118888810880888888
 888888888822eeeeeeeeff8888888888333335111111111441111111115333338888880000088888888811110000088888888111100088888888111000000888
 88888888888822eeeeff888888888888333333511111119999111111153333338888811111008888888111000000008888881111000000888888110000000088
 88888888888888222288888888888888333333351111111441111111533333338881111000000088888110000000008888811100000000888881000000000088
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbabbabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbabbabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbaababbaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb777faaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb777fffaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb7777bbbbbbbbbbbbbbbbbbbbbbbb77fffffff88aaafbbbbbbbbbbbbbbbbbb111111111bbbbbbbbbbb
+bbbbbbbbbbbbbbb7777bbbbbbbbbbbbbbbbbbbbbbbbbb77ffff77bbbbbbbbbbbbbbbbbbbbbfffffffffffaaafffbbbbbbbbbbbbbbb111111111111111bbbbbbb
+bbbbbbbbbbbbb77ffff77bbbbbbbbbbbbbbbbbbbbbbb7ffffffff00bbbbbbbbbbbbbbbbbf9ffffff9fffffffffffbbbbbbbbbbbbb11111111111111100bbbbbb
+bbbbbbbbbbbb7ffffffff00bbbbbbbbbbbbbbbbbbbb7fffffff0000bbbbbbbbbbbbbbbb999fffff9999ffffffff99bbbbbbbbbbb111111111111111000bbbbbb
+bbbbbbbbbbb7fffffff0000bbbbbbbbbbbbbbbbbbbbfffffff00000bbbbbbbbbbbbbb9911f9fffff1199ffff99999bbbbbbbbbbb1111111111111110000bbbbb
+bbbbbbbbbbbfffffff00000bbbbbbbbbbbbbbbbbbbff0ff0ffff000bbbbbbbbbbbbfff111fffffff111f9ff99999ffbbbbbbbbb11111111111111100000bbbbb
+bbfffbbbbbff0ff0ffff000bbbbbbbbbbbbbbbbbbbfffffffffff00fbbbbbfffbbffff111fffffff111fff999999fffbbbbbbbb11111111111111100000bbbbb
+bffffbbbbbfffffffffff00fbbbbbbbbbbbbbbbbbbfffffffffff0ffbbbbbfffbbfffffffffffffffffffffff99ffffbbbbbbb2211111111111110000000bbbb
+bb666bbbbbfffffffffff0ffbbbbbbbbbbbbbbbbbbbff0ffffff00ffbbbb6666bffffffff44ffffffffffffff9fffffbbbbbbb2221111111111120000000bbbb
+bb666bbbbbbff0ffffff00ffbbbbbbbbbfffbbbbbbbff00fffff00fbbbbb6666bffffff4444fffffffffffffff9ffffbbbbbb22221111111111220000000bbbb
+bbb666bbbbbff00fffff00fbbbbbbbbbbfffbbbbbbbbfeeffff00fbbbbb6666bbf9ffff4444fffffffffffffff9ffffbbbbbb22222111111111220000000bbbb
+bbb666bbbbbbfeeffff00fbbbbbbbfffb6666bbbbbbbbeeffffffbbbb666666bbbffff5555ffff9fffffffffffffffbbbbbbb22222211111112220000000bbbb
+bbbb666bbbbbbffffffffbbbbbbbbfffb6666bbbbbbbbbbffff61bb6666666bbbbf9ff5ff5fffffffffffffffffffbbbbbbbb22222211111122220000000bbbb
+bbbb66666bbbbbbffff61bbbbbbb6666bb6666bbbbbbb661fff16666666666bbbbbffff55ff9fff9ffffffffffffbbbbbbbb222222221111122220000000bbbb
+bbbbb66666bbb661fff16bbbbbbb6666bb6666bbbb666666111666666666bbbbbbbb9ffffffffffffffffffffffbbbbbbbbb222222221111222220000000bbbb
+bbbbbb6666666666111666bbbbb6666bbbb66666666666611166666666bbbbbbbbbbbf9ff9fffffff9ffffffffbbbbbbbbbb222222222112222210000000bbbb
+bbbbbbb6666666611166666bb666666bbbb666666666666116666666bbbbbbbbbbbbbbbbbbfff9ffffffffffbbbbbbbbbbbb222222222112222210000000bbbb
+bbbbbbbbb666666116666666666666bbbbbbb666666666611666666bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2222222221112222210000000bbbb
+bbbbbbbbb666666116666666666666bbbbbbbbbb666666111666666bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbeebbb2222222221112222200000000bbbb
+bbbbbbbbb6666611166666666666bbbbbbbbbbbbbb6666111666666bbbbbbbbbbfffff5555fff9ffbbbbbbbbbbeebbbbbbb222222222112222220000000bbbbb
+bbbbbbbbbb6666111666666666bbbbbbbbbbbbbbbb6666116666666bbbbbbbbbbf9fffffffffffffbbbbbbbeeebbbbbbbbb222222221112222220000000bbbbb
+bbbbbbbbbb6666116666666bbbbbbbbbbbbbbbbbbb666111666666bbbbbbbbbbbbffffffff9fff9fbbbbbeebbbbbbbbbbbb222222221112222220000000bbbbb
+bbbbbbbbbb666111666666bbbbbbbbbbbbbbbbbbbb666111666666bbbbbbbbbbbbb9ffffffffffffbbbbebbbbbbbbbbbbbb222222221112222210000000bbbbb
+bbbbbbbbbb666111666666bbbbbbbbbbbbbbbbbbbb661111666666bbbbbbbbbbbbbbf9ff9fffffffbbbebbbbbbbbbbbbbbb222222221112222210000000bbbbb
+bbbbbbbbbb661111666666bbbbbbbbbbbbbbbbbbbbb61111666666bbbbbbbbbbbbbbbbbbbfff9fffbbebbbbbbbbbbbbbbb2222222211122222210000000bbbbb
+bbbbbbbbbbb61111666666bbbbbbbbbbbbbbbbbbbbb66116666666bbbbbbbbbbbbbbbbbbbbbbbbbbbebbbbbbbbbbbbbbbb2222222211122222210000000bbbbb
+bbbbbbbbbbb66116666666bbbbbbbbbbbbbbbbbbbbb6666666666bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2222222211122222210000000bbbbb
+bbbbbbbbbbb6666666666bbbbbbbbbbbbbbbbbbbbbb6666666666bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2222222111122222210000000bbbbb
+bbbbbbbbbbb6666666666bbbbbbbbbbbbbbbbbbbbbb666666666bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2222222111122888110000000bbbbb
+bbbbbbbbbbb666666666bbbbbbbbbbbbbbbbbbbbbbbb66666666bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb222222211122888881000000bbbbbb
+bbbbbbbbbbbb55555555bbbbbbbbbbbbbbbbbbbbbbbb55555555bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb888888888888888888888888881000000bbbbbb
+bbbbbbbbbbbb55555555bbbbbbbbbbbbbbbbbbbbbbb555555555bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb88888888888888888888888888888000000bbbbbb
+bbbbbbbbbbb5555555555bbbbbbbbbbbbbbbbbbbbb55555555555bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbeeee88888888888888888888fff888000000bbbbbb
+bbbbbbbbbbb5555555555bbbbbbbbbbbbbbbbbbbbb55555555555bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbeeeeeeee8888888888888888effff888000000bbbbbb
+bbbbbbbbbb55555055555bbbbbbbbbbbbbbbbbbbb555555055555bbbbbbbbbbbbbbbbbbbbbbbbbbbbbeeeeeeeeeeeeeeeeeeeeeeeeeeeffff888000000bbbbbb
+bbbbbbbbb555555055555bbbbbbbbbbbbbbbbbbb5555555055555bbbbbbbbbbbbbbbbbbbbbbbbbeeeeeeeeeeeee55ee5eeeeeeeeeeeefffff888000000bbbbbb
+bbbbbbbbb555550555555bbbbbbbbbbbbbbbbbbb5555550555555bbbbbbbbbbbbbbbbbbbbbeeeeeeeeeeeeeeeeeee55eeeeeeeeeeeeeffffff88000000bbbbbb
+bbbbbbbb555555b55555bbbbbbbbbbbbbbbbbbb5555555b55555bbbbbbbbbbbbbbbbbbbeeeeeeeeeeeeeeeee55555e555eeeeeeeeeeeffffff8800000bbbbbbb
+bbbbbbbb55555b555555bbbbbbbbbbbbbbbbbbb555555b555555bbbbbbbbbbbbbbbbbeeeeeeeeeeeeeeeeeeeeeeee5eeeeeeeeeeeeeffffffff800000bbbbbbb
+bbbbbbbb55555b55555bbbbbbbbbbbbbbbbbbbb55555bb555555bbbbbbbbbbbbbbbbeeeeeeeeeeeeeeeee55eee5e5eeeeeeeeeeeeeefffffffff00000bbbbbbb
+bbbbbbb55555555555bbbbbbbbbbbbbbbbbbbbb555555bb5555bbbbbbbbbbbbbbbbeeeeeeeeeeeeeee555ee5eee5eeeeeeeeeeee9efffffffff000000bbbbbbb
+bbbbbbb55555b5555bbbbbbbbbbbbbbbbbbbbbbb555555b5555bbbbbbbbbbbbbbbeeeeeeeeeeeeeeeeeee5ee5eeeeeeeeeeeeeeff9fffffffff000000bbbbbbb
+bbbbbbb5555500000bbbbbbbbbbbbbbbbbbbbbbbb5555500055bbbbbbbbbbbbbbeeeeeeeeeeeeeeeeeeeee555eeeeeeeeeeee9fff9fffffffff000000bbbbbbb
+bbbbbbb555552222200bbbbbbbbbbbbbbbbbbbbbbb555552200bbbbbbbbbbbbbfeeeeeeeeeeee55eeeee555eeeeeeeeeee9eff9fffffffffff1000000bbbbbbb
+bbbbbbbb555552222220bbbbbbbbbbbbbbbbbbbbb0255ff22220bbbbbbbbbbbbffeeeeeeee555ee5ee55eeeeeeeeeeeffff9ff9fffffffffff1000000bbbbbbb
+bbbbbbbb5555522222220bbbbbbbbbbbbbbbbbbb02222fff22220bbbbbbbbbbbfffeeeeeeeeeeeee5eeeeeeeeeeeeffffff9fffffffffffff11000000bbbbbbb
+bbbbbbb055555222222220bbbbbbbbbbbbbbbbb0222222ff222220bbbbbbbbbbffffeeeeeeeeeee55eeeeeeeeeeeffffffffffffffffffff111000000bbbbbbb
+bbbbbbb025555522222220bbbbbbbbbbbbbbbbb022222fff222220bbbbbbbbbbfff5ffeeeeee555eeeeeeeeeeeeffffffffffffffff11111111000000bbbbbbb
+bbbbbb02255555222222220bbbbbbbbbbbbbbb02222222002222220bbbbbbbbb3f5ffffeee55eeeeeeeeeeeeeeffffffff11111111111111111000000bbbbbbb
+bbbbbb02225555522222220bbbbbbbbbbbbbbb02222222222222220bbbbbbbbb33fffffffeeeeeeeeeeeeeeee1fffffff111111111111111111000000bbbbbbb
+bbbbbb0222255ff22222220bbbbbbbbbbbbbbb02222222222222220bbbbbbbbb333ffffffffeeeeeeeeeeeee11ffff111111111111111111111000000bbbbbbb
+bbbbbb0222222fff2222220bbbbbbbbbbbbbbb02222222222222220bbbbbbbbb3333ffffffffeeeeeeeeeee001111111111111111111100000000000bbbbbbbb
+bbbbbb02222222ff2222220bbbbbbbbbbbbbbb02222222222222220bbbbbbbbb33333fffffffffeeeeeeeee000111111111111111000000000000000bbbbbbbb
+bbbbbbb022222fff222220bbbbbbbbbbbbbbbbb022222222222220bbbbbbbbbb3333333ffffffffffeeeeee000000111111000000ffff00000000000bbbbbbbb
+bbbbbbb022222200222220bbbbbbbbbbbbbbbbb022222222222220bbbbbbbbbb333333333ffffffffffffee000000111000f000ffffff00000000000bbbbbbbb
+bbbbbbbb0222222222220bbbbbbbbbbbbbbbbbbb0222222222220bbbbbbbbbbb333333333333fffffffffffff0000000ffff000ffffff00000000000bbbbbbbb
+bbbbbbbbb02222222220bbbbbbbbbbbbbbbbbbbbb02222222220bbbbbbbbbbbb333333333333333ffffffffffffffffffffff000fff3000000000000bbbbbbbb
+bbbbbbbbbb002222200bbbbbbbbbbbbbbbbbbbbbbb002222200bbbbbbbbbbbbb33333333333333333333333333333333333330003330000000000000bbbbbbbb
+bbbbbbbbbbbb00000bbbbbbbbbbbbbbbbbbbbbbbbbbb00000bbbbbbbbbbbbbbb33333333333333333333333333333333333330003330000000000000bbbbbbbb
 __map__
 42435c5c5c5c5c5c5c5c5c5c5c5c444500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 525c5c5c5c5c5c5c5c5c5c5c5c5c5c5500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
