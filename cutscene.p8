@@ -7,13 +7,14 @@ __lua__
 cutscene_state = {}
 
 function _init()
-  cutscene_state = {
-    message = "hello new jester. \ni have brought you from the \nfuture to entertain me.\n\nnow juggle!\njuggle like your life \ndepends on it!",
-    speaker = "king",
-    message_box_frame = 0,
-    new_scene = true
-  }
+  --cutscene_state = {
+    --message = "hello new jester. \ni have brought you from the \nfuture to entertain me.\n\nnow juggle!\njuggle like your life \ndepends on it!",
+    --speaker = "king",
+    --message_box_frame = 0,
+    --new_scene = true
+  --}
   -- reading = false
+  cutscene_state = intro_init()
 end
 
 function _update()

@@ -1,11 +1,10 @@
 
 -- creates the text box, message, draws the speaker
 function cutscene(s)
-    -- reading = true -- changes state to cutscene
     message_box_draw(s)
-    if s.speaker == "king" then
+    if s.messages[1].speaker == "king" then
      draw_king()
-    elseif s.speaker == "mc" then
+    elseif s.messages[1].speaker == "mc" then
     draw_mc()
     end
 end
@@ -22,19 +21,18 @@ function message_box_draw(s)
    else
     rectfill(2,2,126,64,13)
     rect(2,2,126,64,6)
-    local new_string = sub(s.message,1,mid(1,(s.message_box_frame)*0.5,#s.message))
+    local new_string = sub(s.messages[1].message,1,mid(1,(s.message_box_frame)*0.5,#s.messages[1].message))
     dshad(new_string,5,5,10)
    end
 end
 
 function intro_init()
     return {
-        cutscene_state = {
-            message = "hello new jester. \ni have brought you from the \nfuture to entertain me.\n\nnow juggle!\njuggle like your life \ndepends on it!",
-            speaker = "king",
+        messages = {
+                {message = "hello new jester. \ni have brought you from the \nfuture to entertain me.\n\nnow juggle!\njuggle like your life \ndepends on it!", speaker = "king"}
+            },
             message_box_frame = 0,
             new_scene = true
-          }
     }
 end
 
@@ -45,6 +43,7 @@ function cutscene_update(s)
         s.message_box_frame = 0
     end
     if btn(4) or btn(5) then
+        print("yay")
     end
 end
 
