@@ -55,7 +55,7 @@ function _draw()
   elseif state == "game" then
     ball_draw(ball_state)
   elseif state == "cutscene" then
-    cutscene(cutscene_state)
+    cutscene_draw(cutscene_state)
   else
     -- die
   end
