@@ -9,6 +9,8 @@ kinganim = {}
 state = "choose"
 cutscene_state = {}
 ball_state = {}
+audience_state = {}
+king_state = {}
 
 function _init()
  music(2)
@@ -35,6 +37,8 @@ function _update()
    if btn(❎) then
      state = "game"
      ball_state = ball_init()
+     audience_state = audience_init()
+     king_state = king_init()
    elseif btn(🅾️) then
      state = "cutscene"
      cutscene_state = intro_init()
@@ -59,7 +63,6 @@ function _draw()
     ball_draw(ball_state)
     audience_draw(audience_state)
     king_draw(king_state)
-    curtains_draw()
   elseif state == "cutscene" then
     cutscene_draw(cutscene_state)
   else
