@@ -1,6 +1,7 @@
 pico-8 cartridge // http://www.pico-8.com
 version 41
 __lua__
+#include extra_lib.lua
 #include game_lib.lua
 #include cutscene_lib.lua
 
@@ -40,6 +41,8 @@ function _update()
    end
  elseif state == "game" then
    ball_update(ball_state)
+   audience_update(audience_state)
+   king_update(king_state)
  elseif state == "cutscene" then
    cutscene_update(cutscene_state)
  else
@@ -54,6 +57,9 @@ function _draw()
     kinganim:draw(10, 10)
   elseif state == "game" then
     ball_draw(ball_state)
+    audience_draw(audience_state)
+    king_draw(king_state)
+    curtains_draw()
   elseif state == "cutscene" then
     cutscene_draw(cutscene_state)
   else
