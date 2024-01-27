@@ -17,12 +17,7 @@ function _init()
 end
 
 function _update()
- --if reading then
-  -- cutscene state
-  --message_box_update()
- --else
-  -- normal state game code
- --end
+  cutscene_update(cutscene_state)
 end
 
 function _draw()
