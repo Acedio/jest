@@ -16,7 +16,7 @@ end
 
 function _draw()
   cls()
-  cutscene(cutscene_state)
+  cutscene_draw(cutscene_state)
 end
 
 --->1

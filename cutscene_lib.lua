@@ -1,7 +1,7 @@
 
    
 -- draw and pop up the message box
-function cutscene(s)
+function cutscene_draw(s)
     cls()
    if s.new_scene then
     rectfill(2,2,mid(2,s.message_box_frame*6,126),2,13)
@@ -28,10 +28,37 @@ function intro_init()
     dialog_i = 1 -- each button press progresses to the next dialog
     return {
         messages = {
-                {message = "hello new jester. \ni have brought you from the \nfuture to entertain me.\n\nnow juggle!\njuggle like your life \ndepends on it!", speaker = "king"},
-                {message = "now i continue talking \nto check if this works", speaker = "king"},
-                {message = "sounds good", speaker = "mc"},
-                {message = "yep", speaker ="king"}
+                {message = "welcome new jester. \ni have brought you from the \nfuture to entertain me.\n\nnow juggle!\njuggle like your life \ndepends on it!", speaker = "king"},
+                {message = "wait, what? i have a \npresentation due today! \n\nand a nomikai tonight!", speaker = "mc"},
+                {message = "caper for me fool! \n\nheads up! \ndrop it and i drop you!", speaker = "king"},
+            },
+            message_box_frame = 0,
+            new_scene = true,
+    }
+end
+
+function win_init()
+    dialog_i = 1 -- each button press progresses to the next dialog
+    return {
+        messages = {
+                {message = "enough! \ncongratulations, you have \nimpressed me", speaker = "king"},
+                {message = "does this mean i can go back \nhome to my own time now?", speaker = "mc"},
+                {message = "proposterous! \ni want to throw more things \nat you tomorrow too! \n\ntake him away!", speaker = "king"},
+                {message = "noooooooooo!", speaker = "mc"}
+            },
+            message_box_frame = 0,
+            new_scene = true,
+    }
+end
+
+function lose_init()
+    dialog_i = 1 -- each button press progresses to the next dialog
+    return {
+        messages = {
+                {message = "future man, \nyour skills are as sharp as a \nwooden spoon \n\nmy disappointment is \nimmeasurable", speaker = "king"},
+                {message = "forgive me my liege, \ngive me another chance!", speaker = "mc"},
+                {message = "alas, i tire of you \n\ntake him away!", speaker = "king"},
+                {message = "noooooooooo!", speaker = "mc"}
             },
             message_box_frame = 0,
             new_scene = true,
@@ -45,7 +72,6 @@ function cutscene_update(s)
         s.message_box_frame = 0
     end
     if s.new_scene == false and btnp(4) or btnp(5) then
-        cls()
         if dialog_i < #s.messages then
             s.message_box_frame = 0
             dialog_i+=1
