@@ -5,12 +5,12 @@ __lua__
 #include cutscene_lib.lua
 
 kinganim = {}
-state = "choose"
+state = "title"
 cutscene_state = {}
 ball_state = {}
 
 function _init()
- music(2)
+ title_init()
  kinganim = anim:new{
   frame:new{
    sprn=16,
@@ -28,16 +28,13 @@ function _init()
 end
 
 function _update()
- if state == "choose" then
-   kinganim:update()
-   --check buttons, update state
-   if btn(❎) then
-     state = "game"
-     ball_state = ball_init()
-   elseif btn(🅾️) then
-     state = "cutscene"
-     cutscene_state = intro_init()
-   end
+ if state == "title" then
+    --check buttons, update state
+    local status = title_update()
+    if status == true then
+      state = "cutscene"
+      cutscene_state = intro_init()
+    end
  elseif state == "game" then
    ball_update(ball_state)
  elseif state == "cutscene" then
@@ -50,9 +47,10 @@ end
 function _draw()
   cls()
   palt(0x0010)
-  if state == "choose" then
-    map()
-    kinganim:draw(10, 10)
+  if state == "title" then
+    --map()
+    --kinganim:draw(10, 10)
+    title_draw()
   elseif state == "game" then
     ball_draw(ball_state)
   elseif state == "cutscene" then
