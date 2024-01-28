@@ -1,5 +1,8 @@
 function ball_init()
   local state = {
+    iswin=false
+    islose=false
+
     balllist = {},
     health=3,
     time_limit=60,
@@ -69,9 +72,12 @@ function ball_init()
   function win()
   end
 
-  function lose()
+  function lose(state)
+  state.islose=true
   print("you lose",50,50,7)
   end
+  
+
 
 
 
@@ -79,15 +85,23 @@ function ball_init()
     decideWhatToDo(state) 
     state.counter+=1
 
+    local ballstatelist={}
+    local ballstateStr
+
     foreach(state.balllist, function(o)
-        o.ballx,o.bally,o.ballvx,o.ballvy
+        o.ballx,o.bally,o.ballvx,o.ballvy,ballstateStr
         =ball(o.ballx,o.bally,o.ballvx,o.ballvy,o,state)
+        if ballstateStr!="nothing_happen" then 
+          add(ballstatelist,ballstateStr)
+        end
+
     end)
 
+    foreach(ballstatelist, function(o)
+      printh(o,"test.txt")
+    end
+    )
 
-
-
-        
     if btn(0) then
         state.angle-=state.paddle_rotatespeed
         state.center_x -= state.paddle_speed
@@ -112,8 +126,9 @@ function ball_init()
   function ball_draw(state)
     map()
 
+
     if state.health<0 then 
-      lose()
+      lose(state)
     end
 
 
@@ -150,6 +165,8 @@ function ball_init()
   end
 
   function ball(x,y,vx,vy,ballstate,state)  
+    local ballstateStr
+
     vy += state.gravity 
     y += vy     
         
@@ -167,8 +184,13 @@ function ball_init()
           state.health-=1
           y=90
           vy*=-1
+
+          ballstateStr="drop_ground"
+
         elseif y>90 and ballstate.isegg==true then
           del(state.balllist,ballstate)
+          ballstateStr="badthings_drop_ground"
+
 
         end
         
@@ -189,17 +211,20 @@ function ball_init()
       if ballstate.isegg==false then
         vx,vy=countcollision(vx,vy,state.angle)
         state.score+=1
+        ballstateStr="collision"
       else 
         state.health-=1
         state.score-=5
         del(state.balllist,ballstate)
+        ballstateStr="badthings_collision"
       end
 
-        
+    else
+      ballstateStr="nothing_happen"    
 
     end
     
-    return x,y,vx,vy
+    return x,y,vx,vy,ballstateStr
     
   end
 
