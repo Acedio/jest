@@ -344,6 +344,8 @@ function ball_init()
       for i=1,state.health do
         spr(73,85+i*8,20) 
       end
-      rectfill(85, 13, 118, 19, 14)
-      print("time: " .. state.time_limit - state.counter\30, 86, 14, 7)
+      rectfill(82, 11, 117, 19, 9)
+      rectfill(82, 11, 116, 18, 10)
+      rectfill(83, 12, 116, 18, 14)
+      print("time: " .. state.time_limit - state.counter\30, 84, 13, 10)
     end
