@@ -34,9 +34,65 @@ function ball_init()
       {time=20,  action="throw"},
     },
 
+    audience_state=audience_init(),
+    king_state=king_init(),
+
     distance
   }
   return state
+  end
+
+  function king_init()
+    return {
+      t = 0,
+      x = 64-8,
+      y = 32,
+    }
+  end
+
+  function king_update(s)
+    s.t += 1
+    if band(s.t, 127) == 0 then
+      sfx(0)
+    end
+  end
+
+  function king_draw(s)
+    palt(0x0010)
+    local laugh = band(s.t,127)
+    if laugh > 6 and laugh < 32 then
+      if band(s.t, 2) == 0 then
+        spr(6, s.x, s.y, 2, 2)
+      else
+        spr(0, s.x, s.y, 2, 2)
+      end
+    elseif band(s.t\15,1) == 1 then
+      spr(0, s.x, s.y, 2, 2)
+    else
+      spr(2, s.x, s.y, 2, 2)
+    end
+  end
+
+  function audience_init()
+    return {
+      t = 0,
+    }
+  end
+
+  function audience_update(s)
+    s.t += 1
+  end
+
+  function audience_draw(s)
+    --audience
+    palt(0x0080)
+    for i=0,7 do
+      spr(104+2*(i%4),i*16,112,2,2)
+    end
+    --curtains
+    for i=0,2 do
+      spr(96,16+32*i,0,4,2)
+    end
   end
 
   function decideWhatToDo(state)
@@ -55,6 +111,7 @@ function ball_init()
   function throw(state)
     local num= flr(rnd(3))
     if num!=1 then
+      --isegg means it is bad and should be dropped.
       add(state.balllist, {ballx=1,bally=1,ballvx=1,ballvy=0,isegg=false})
     else
       add(state.balllist, {ballx=1,bally=1,ballvx=1,ballvy=0,isegg=true})
@@ -118,13 +175,17 @@ function ball_init()
       elseif btn(5) then 
         state.angle-=state.paddle_rotatespeed	    
     end
-    
+
+    king_update(state.king_state)
+    audience_update(state.audience_state)
 
 
   end
 
   function ball_draw(state)
     map()
+    audience_draw(state.audience_state)
+    king_draw(state.king_state)
 
 
     if state.health<0 then 
@@ -132,7 +193,6 @@ function ball_init()
     end
 
 
-    draw_heart(state)
     foreach(state.balllist, function(o)
       if o.isegg==false then
         spr(44,o.ballx,o.bally,2,2)
@@ -140,6 +200,8 @@ function ball_init()
         spr(40,o.ballx,o.bally,2,2)
       end
     end)
+
+    draw_heart(state)
 
     local x1, y1, x2, y2 = update_line_endpoints(state)
     if state.turningleft==true then
