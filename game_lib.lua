@@ -5,7 +5,7 @@ function ball_init()
     islose=false,
 
     anglelimit={-0.08,0.08},
-
+    spacelimit={12,115},
     balllist = {},
     health=3,
     ball_limit=3; 
@@ -145,7 +145,15 @@ function ball_init()
       return false
     end
   end
-
+  function inspace(state,direction)
+    if state.center_x+ (direction*state.paddle_speed) >state.spacelimit[1] 
+    and 
+    state.center_x+ (direction*state.paddle_speed) <state.spacelimit[2] then
+      return true
+    else
+      return false
+    end
+  end
 
   function ball_update(state)
     decideWhatToDo(state) 
@@ -167,16 +175,18 @@ function ball_init()
       state.islose=true
     end
 
-		if btn(0) then
+		if btn(0) and inspace(state,-1)==true
+    then
         state.angle-=state.paddle_rotatespeed
 
-        if inanglelimit(state)==false then
+        if inanglelimit(state)==false  then
           state.angle+=state.paddle_rotatespeed
         end
 
         state.center_x -= state.paddle_speed
         state.turningleft=true
-    elseif btn(1) then
+    elseif btn(1)  and inspace(state,1)==true
+    then
       state.angle+=state.paddle_rotatespeed
 
       if inanglelimit(state)==false then
@@ -253,12 +263,12 @@ function ball_init()
     vy += state.gravity 
     y += vy     
         
-    if x<1
+    if x<8
     then
-        x=1
+        x=8
         vx*=-1
-    elseif x>100 then
-        x=100   
+    elseif x>105 then
+        x=104   
         vx*=-1            
     end
         
