@@ -201,7 +201,13 @@ function ball_init()
     king_update(state.king_state)
     audience_update(state.audience_state)
 
+    if state.iswin then
+      return "win"
+    elseif state.islose then
+      return "lose"
+    end
 
+    return "running"
   end
 
   function ball_draw(state)
