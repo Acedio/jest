@@ -35,8 +35,10 @@ function ball_init()
       {time=1, action="throw"},
       {time=8,  action="laugh"},
       {time=9,  action="throw"},
-      {time=19,  action="laugh"},
-      {time=20,  action="throw"},
+      {time=17,  action="laugh"},
+      {time=18,  action="throw"},
+      {time=22,  action="laugh"},
+      {time=23,  action="potion"},
       {time=time_limit, action="win"},
     },
 
@@ -128,6 +130,8 @@ function ball_init()
           local action = state.events[i].action
           if action=="throw" then 
             throw(state)
+          elseif action=="potion" then
+            throw(state, 2)
           elseif action=="laugh" then
             king_laugh(state.king_state)
           elseif action=="win" then
@@ -137,8 +141,8 @@ function ball_init()
       end
   end
 
-  function throw(state)
-    local object = flr(rnd(8)) + 1
+  function throw(state, forced_obj)
+    local object = forced_obj or flr(rnd(8)) + 1
     sfx(23)
 		add(state.balllist, {ballx=1,bally=1,ballvx=1,ballvy=0,object_type=object})
   end
