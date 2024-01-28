@@ -1,60 +1,215 @@
 function ball_init()
   local state = {
+    iswin=false,
+    islose=false,
+
     balllist = {},
+    health=3,
+    time_limit=60,
+    ball_limit=3; 
     center_x = 64,
-    center_y = 80,
+    center_y = 90,
     line_length = 20,
     gravity = 0.1,
     bounce = -1,
-    counter = 1,
-    interval = 1 * 30 ,
-    paddle_speed=1,
+    counter = 0,
+    interval = 5 * 30 ,
+    paddle_speed=2.5,
+
+    turningleft=false,
+
+    paddle_rotatespeed=0.002,
+  
+    score=0,
+
     angle=0,
+
+    events = {
+      {time=0, action="throw"},
+      {time=1, action="throw"},
+      {time=2, action="throw"},
+      {time=8,  action="laugh"},
+      {time=10,  action="throw"},
+      {time=18,  action="laugh"},
+      {time=20,  action="throw"},
+    },
+
+    audience_state=audience_init(),
+    king_state=king_init(),
 
     distance
   }
   return state
   end
 
+  function king_init()
+    return {
+      t = 0,
+      x = 64-8,
+      y = 32,
+    }
+  end
+
+  function king_update(s)
+    s.t += 1
+    if band(s.t, 127) == 0 then
+      sfx(0)
+    end
+  end
+
+  function king_draw(s)
+    palt(0x0010)
+    local laugh = band(s.t,127)
+    if laugh > 6 and laugh < 32 then
+      if band(s.t, 2) == 0 then
+        spr(6, s.x, s.y, 2, 2)
+      else
+        spr(0, s.x, s.y, 2, 2)
+      end
+    elseif band(s.t\15,1) == 1 then
+      spr(0, s.x, s.y, 2, 2)
+    else
+      spr(2, s.x, s.y, 2, 2)
+    end
+  end
+
+  function audience_init()
+    return {
+      t = 0,
+    }
+  end
+
+  function audience_update(s)
+    s.t += 1
+  end
+
+  function audience_draw(s)
+    --audience
+    palt(0x0080)
+    for i=0,7 do
+      spr(104+2*(i%4),i*16,112,2,2)
+    end
+    --curtains
+    for i=0,2 do
+      spr(96,16+32*i,0,4,2)
+    end
+  end
+
+  function decideWhatToDo(state)
+    foreach(state.events, function(event)
+      if  state.counter==event.time*30 then 
+          local action = event.action
+          if action=="throw" then 
+            throw(state)
+            elseif action=="laugh" then
+              kinglaugh(state)
+          end
+        end
+      end)
+  end
+
+  function throw(state)
+    local num= flr(rnd(3))
+    if num!=1 then
+      --isegg means it is bad and should be dropped.
+      add(state.balllist, {ballx=1,bally=1,ballvx=1,ballvy=0,isegg=false})
+    else
+      add(state.balllist, {ballx=1,bally=1,ballvx=1,ballvy=0,isegg=true})
+    end
+  end
+
+
+  function kinglaugh(state)
+
+  end
+
+  function ball_drop(state)
+  end
+
+  function win()
+  end
+
+  function lose(state)
+  state.islose=true
+  print("you lose",50,50,7)
+  end
+  
+
+
+
+
   function ball_update(state)
+    decideWhatToDo(state) 
     state.counter+=1
-    if state.counter >= state.interval then
-        add(state.balllist, {ballx=1,bally=1,ballvx=1,ballvy=0})
-        state.counter = 0
-    end    
+
+    local ballstatelist={}
+    local ballstateStr
+
     foreach(state.balllist, function(o)
-        o.ballx,o.bally,o.ballvx,o.ballvy
-        =ball(o.ballx,o.bally,o.ballvx,o.ballvy,state)
+        o.ballx,o.bally,o.ballvx,o.ballvy,ballstateStr
+        =ball(o.ballx,o.bally,o.ballvx,o.ballvy,o,state)
+        if ballstateStr!="nothing_happen" then 
+          add(ballstatelist,ballstateStr)
+        end
+
     end)
 
-
-
-
-        
-    if btn(0) then
-        state.angle-=0.01
-        state.center_x -= state.paddle_speed
-    elseif btn(1) then
-      state.angle+=0.01
-      state.center_x += state.paddle_speed
-    elseif btn(4) then
-      state.angle+=0.01
-      elseif btn(5) then 
-        state.angle-=0.01			    
+    foreach(ballstatelist, function(o)
+      printh(o,"test.txt")
     end
-    
+    )
+
+    if btn(0) then
+        state.angle-=state.paddle_rotatespeed
+        state.center_x -= state.paddle_speed
+        state.turningleft=true
+    elseif btn(1) then
+      state.angle+=state.paddle_rotatespeed
+      state.center_x += state.paddle_speed
+      state.turningleft=false
+
+
+
+    elseif btn(4) then
+      state.angle+=state.paddle_rotatespeed
+      elseif btn(5) then 
+        state.angle-=state.paddle_rotatespeed	    
+    end
+
+    king_update(state.king_state)
+    audience_update(state.audience_state)
 
 
   end
 
   function ball_draw(state)
-    cls()             
-    
+    map()
+    audience_draw(state.audience_state)
+    king_draw(state.king_state)
+
+
+    if state.health<0 then 
+      lose(state)
+    end
+
+
     foreach(state.balllist, function(o)
-        spr(1,o.ballx,o.bally)
+      if o.isegg==false then
+        spr(44,o.ballx,o.bally,2,2)
+      else 
+        spr(40,o.ballx,o.bally,2,2)
+      end
     end)
 
+    draw_heart(state)
+
     local x1, y1, x2, y2 = update_line_endpoints(state)
+    if state.turningleft==true then
+    spr(12,state.center_x-8,state.center_y,2,2)
+    else 
+      spr(14,state.center_x-8,state.center_y,2,2)
+    end
+
     line(x1, y1, x2, y2, 7)
     
   end
@@ -71,7 +226,9 @@ function ball_init()
       return end_x1, end_y1, end_x2, end_y2
   end
 
-  function ball(x,y,vx,vy,state)  
+  function ball(x,y,vx,vy,ballstate,state)  
+    local ballstateStr
+
     vy += state.gravity 
     y += vy     
         
@@ -85,26 +242,51 @@ function ball_init()
     end
         
         
-        if y>90 then 
-        y=90
-        vy*=-1
+        if y>90 and ballstate.isegg==false then 
+          state.health-=1
+          y=90
+          vy*=-1
+
+          ballstateStr="drop_ground"
+
+        elseif y>90 and ballstate.isegg==true then
+          del(state.balllist,ballstate)
+          ballstateStr="badthings_drop_ground"
+
+
         end
         
         x+=vx
         count_distance(x,y,state)
-    if state.distance <12
-    and x >= min(state.center_x-state.line_length* cos(state.angle),state.center_x+state.line_length* cos(state.angle))
-    and x <= max(state.center_x-state.line_length* cos(state.angle),state.center_x+state.line_length* cos(state.angle))
+
+
+
+    if state.distance <8
+    and x >= min(state.center_x-state.line_length* cos(state.angle),state.center_x+state.line_length* cos(state.angle))-2
+    and x <= max(state.center_x-state.line_length* cos(state.angle),state.center_x+state.line_length* cos(state.angle))-2
     then
     local distanceneed
-    distanceneed=13-state.distance
+    distanceneed=9-state.distance
         y -= distanceneed*cos(state.angle)
         x	-=	distanceneed*sin(state.angle)
-    
+      
+      if ballstate.isegg==false then
         vx,vy=countcollision(vx,vy,state.angle)
-    end
+        state.score+=1
+        ballstateStr="collision"
+      else 
+        state.health-=1
+        state.score-=5
+        del(state.balllist,ballstate)
+        ballstateStr="badthings_collision"
+      end
 
-    return x,y,vx,vy
+    else
+      ballstateStr="nothing_happen"    
+
+    end
+    
+    return x,y,vx,vy,ballstateStr
     
   end
 
@@ -129,3 +311,9 @@ function ball_init()
     return vx,vy
 
 		end
+
+    function draw_heart(state)
+      for i=1,state.health do
+    spr(73,85+i*8,10) 
+    end
+   end
