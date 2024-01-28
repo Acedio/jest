@@ -1,7 +1,7 @@
 function ball_init()
   local state = {
-    iswin=false
-    islose=false
+    iswin=false,
+    islose=false,
 
     balllist = {},
     health=3,
