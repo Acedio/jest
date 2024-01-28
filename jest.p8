@@ -7,12 +7,12 @@ __lua__
 #include cutscene_lib.lua
 
 kinganim = {}
-state = "choose"
+state = "title"
 cutscene_state = {}
 ball_state = {}
 
 function _init()
- music(2)
+ title_init()
  kinganim = anim:new{
   frame:new{
    sprn=16,
@@ -30,16 +30,13 @@ function _init()
 end
 
 function _update()
- if state == "choose" then
-   kinganim:update()
-   --check buttons, update state
-   if btn(❎) then
-     state = "game"
-     ball_state = ball_init()
-   elseif btn(🅾️) then
-     state = "cutscene"
-     cutscene_state = intro_init()
-   end
+ if state == "title" then
+    --check buttons, update state
+    local status = title_update()
+    if status == true then
+      state = "cutscene"
+      cutscene_state = intro_init()
+    end
  elseif state == "game" then
    ball_update(ball_state)
  elseif state == "cutscene" then
@@ -52,9 +49,10 @@ end
 function _draw()
   cls()
   palt(0x0010)
-  if state == "choose" then
-    map()
-    kinganim:draw(10, 10)
+  if state == "title" then
+    --map()
+    --kinganim:draw(10, 10)
+    title_draw()
   elseif state == "game" then
     ball_draw(ball_state)
   elseif state == "cutscene" then
@@ -332,6 +330,7 @@ bbbbbbbbb02222222220bbbbbbbbbbbbbbbbbbbbb02222222220bbbbbbbbbbbb333333333333333f
 bbbbbbbbbb002222200bbbbbbbbbbbbbbbbbbbbbbb002222200bbbbbbbbbbbbb33333333333333333333333333333333333330003330000000000000bbbbbbbb
 bbbbbbbbbbbb00000bbbbbbbbbbbbbbbbbbbbbbbbbbb00000bbbbbbbbbbbbbbb33333333333333333333333333333333333330003330000000000000bbbbbbbb
 __label__
+
 5dddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeddddddddddddddd5
 65ddddddddddddddeeeeeeeeeeeeeeeaaeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeaaeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeaaeeeeeeeeeeeeeeedddddddddddddd56
 d65ddddddddddd66eeeeeeeeeeeeeeeaaeeeeeeeeeeeeeefeeeeeeeeeeeeeeeaaeeeeeeeeeeeeeefeeeeeeeeeeeeeeeaaeeeeeeeeeeeeeef66ddddddddddd56d
@@ -499,7 +498,7 @@ d014002000700007003575000700007003e75000700007000070000700007002f70000700007003d
 000200002df5023f5020f501af5017f5016f500bf500df500bf500bf5001f5002f5005f700ff5011f5014f0016f001af0026f0028f002df0030f0032f0035f0037f0038f0039f0039f0038f0036f0034f0033f00
 08140000297122c72230732307323375233772337722e7522b7322b712297322970229732297322e7422e7022e7422e7623077233762307022b7422b7622e7422b742337722c702317222f742307522e7522e762
 __music__
-07 43044544
+07 03040504
 03 06070809
 01 0a0b0c4d
 02 120b0c44

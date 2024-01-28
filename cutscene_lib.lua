@@ -26,6 +26,8 @@ end
 
 function intro_init()
     dialog_i = 1 -- each button press progresses to the next dialog
+    music(-1)
+    music(0, 1000) -- start cutscene music
     return {
         messages = {
                 {message = "welcome new jester. \ni have brought you from the \nfuture to entertain me.\n\nnow juggle!\njuggle like your life \ndepends on it!", speaker = "king"},
@@ -33,12 +35,14 @@ function intro_init()
                 {message = "caper for me fool! \n\nheads up! \ndrop it and i drop you!", speaker = "king"},
             },
             message_box_frame = 0,
-            new_scene = true,
+            new_scene = true
     }
 end
 
 function win_init()
     dialog_i = 1 -- each button press progresses to the next dialog
+    music(-1)
+    music(2, 1000) -- start win music
     return {
         messages = {
                 {message = "enough! \ncongratulations, you have \nimpressed me", speaker = "king"},
@@ -47,12 +51,14 @@ function win_init()
                 {message = "noooooooooo!", speaker = "mc"}
             },
             message_box_frame = 0,
-            new_scene = true,
+            new_scene = true
     }
 end
 
 function lose_init()
     dialog_i = 1 -- each button press progresses to the next dialog
+    music(-1)
+    music(0, 1000) -- start cutscene music
     return {
         messages = {
                 {message = "future man, \nyour skills are as sharp as a \nwooden spoon \n\nmy disappointment is \nimmeasurable", speaker = "king"},
@@ -61,7 +67,7 @@ function lose_init()
                 {message = "noooooooooo!", speaker = "mc"}
             },
             message_box_frame = 0,
-            new_scene = true,
+            new_scene = true
     }
 end
 
@@ -111,4 +117,45 @@ end
 function dshad (str, x, y)
  print (str, x+1, y+1, 1)
  print (str, x, y, 10)
+end
+
+-- title screen init
+function title_init()
+    
+end
+
+-- title screen update
+function title_update()
+    if btn(❎) or btn(🅾️) then
+        return true
+    else
+        return false
+    end
+end
+
+-- title screen draw
+function title_draw()
+    cls()
+    title = "surely you jest!" --16 characters
+    for i = 1, 16 do
+        t1 = time()*30 + i*4
+        
+        title_x = 30 + i*4 + cos(t1/120)*3
+        title_y = 34 + cos(t1/50)*4
+        print(title[i], title_x+1, title_y+1,2)
+        print(title[i], title_x, title_y,10)
+    end
+    
+    palt(8,true)
+    for i=0,4 do
+        spr(96,0+(i*32),1,4,2)
+    end
+    print("press ❎/🅾️ to start",29,101,2)
+    print("press ❎/🅾️ to start",28,100,7)
+
+    print("a game by black bear roll",19,71,2)
+    print("a game by black bear roll",18,70,7)
+
+    print("global game jam 2024",29,81,2)
+    print("global game jam 2024",28,80,7)
 end
