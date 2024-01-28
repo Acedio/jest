@@ -39,6 +39,7 @@ function ball_init()
 
     distance
   }
+  music(1)
   return state
   end
 
@@ -239,10 +240,12 @@ function ball_init()
           y=90
           vy*=-1
 
+          sfx(2)
           ballstateStr="drop_ground"
 
         elseif y>90 and ballstate.isegg==true then
           del(state.balllist,ballstate)
+          sfx(17)
           ballstateStr="badthings_drop_ground"
 
 
@@ -265,11 +268,13 @@ function ball_init()
       if ballstate.isegg==false then
         vx,vy=countcollision(vx,vy,state.angle)
         state.score+=1
+        sfx(1)
         ballstateStr="collision"
       else 
         state.health-=1
         state.score-=5
         del(state.balllist,ballstate)
+        sfx(17)
         ballstateStr="badthings_collision"
       end
 
