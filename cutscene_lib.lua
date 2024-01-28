@@ -82,9 +82,10 @@ function cutscene_update(s)
             s.message_box_frame = 0
             dialog_i+=1
         else
-            -- return change state to game mode
+            return "done"
         end
     end
+    return "running"
 end
 
 

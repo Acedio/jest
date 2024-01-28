@@ -40,7 +40,11 @@ function _update()
  elseif state == "game" then
    ball_update(ball_state)
  elseif state == "cutscene" then
-   cutscene_update(cutscene_state)
+   local status = cutscene_update(cutscene_state)
+   if status == "done" then
+     ball_state = ball_init()
+     state = "game"
+   end
  else
    -- die
  end
