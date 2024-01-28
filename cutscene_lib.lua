@@ -3,6 +3,7 @@
 -- draw and pop up the message box
 function cutscene_draw(s)
     cls()
+    palt(0x0080)
     map()
    if s.new_scene then
     rectfill(2,2,mid(2,s.message_box_frame*6,126),2,2)
