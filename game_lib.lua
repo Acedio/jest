@@ -1,5 +1,6 @@
 function ball_init()
   local time_limit = 40
+  local rethrow_delay_start = 40
   local state = {
     iswin=false,
     islose=false,
@@ -21,7 +22,8 @@ function ball_init()
 
     turningleft=false,
 
-    paddle_rotatespeed=0.002,
+    paddle_rotatespeed=0.006,
+    movement_rotatespeed=0.002,
     anglelimit={-0.08,0.08},
   
     score=0,
@@ -31,14 +33,16 @@ function ball_init()
     events = {
       {time=0, action="laugh"},
       {time=1, action="throw"},
-      {time=3, action="laugh"},
-      {time=4, action="throw"},
       {time=8,  action="laugh"},
       {time=9,  action="throw"},
       {time=19,  action="laugh"},
       {time=20,  action="throw"},
       {time=time_limit, action="win"},
     },
+
+    rethrow_count=0,
+    rethrow_delay=rethrow_delay_start,
+    rethrow_delay_start=rethrow_delay_start,
 
     object_types = {
       {good=true},
@@ -157,6 +161,18 @@ function ball_init()
 
   function ball_update(state)
     decideWhatToDo(state) 
+    if state.rethrow_count > 0 then
+      if state.rethrow_delay == state.rethrow_delay_start - 10 then
+        king_laugh(state.king_state)
+      end
+      if state.rethrow_delay > 0 then
+        state.rethrow_delay -= 1
+      else
+        throw(state)
+        state.rethrow_count -= 1
+        state.rethrow_delay = state.rethrow_delay_start
+      end
+    end
     state.counter+=1
 
     local ballstatelist={}
@@ -177,20 +193,20 @@ function ball_init()
 
 		if btn(0) and inspace(state,-1)==true
     then
-        state.angle-=state.paddle_rotatespeed
+        state.angle-=state.movement_rotatespeed
 
         if inanglelimit(state)==false  then
-          state.angle+=state.paddle_rotatespeed
+          state.angle+=state.movement_rotatespeed
         end
 
         state.center_x -= state.paddle_speed
         state.turningleft=true
     elseif btn(1)  and inspace(state,1)==true
     then
-      state.angle+=state.paddle_rotatespeed
+      state.angle+=state.movement_rotatespeed
 
       if inanglelimit(state)==false then
-        state.angle-=state.paddle_rotatespeed
+        state.angle-=state.movement_rotatespeed
       end
 
       state.center_x += state.paddle_speed
@@ -281,6 +297,7 @@ function ball_init()
     local good_object = state.object_types[ballstate.object_type].good
     if y>90 then
       del(state.balllist,ballstate)
+      state.rethrow_count += 1
       if good_object then 
         state.health-=1
         y=90
@@ -318,6 +335,7 @@ function ball_init()
         state.score-=5
         del(state.balllist,ballstate)
         sfx(17)
+        state.rethrow_count += 1
         ballstateStr="badthings_collision"
       end
 
