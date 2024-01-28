@@ -63,8 +63,8 @@ function lose_init()
         messages = {
                 {message = "future man, \nyour skills are as sharp as a \nwooden spoon \n\nmy disappointment is \nimmeasurable", speaker = "king"},
                 {message = "forgive me my liege, \ngive me another chance!", speaker = "mc"},
-                {message = "alas, i tire of you \n\ntake him away!", speaker = "king"},
-                {message = "noooooooooo!", speaker = "mc"}
+                {message = "fine \n\ni'll let you try once more\ndon't disappoint me!", speaker = "king"},
+                {message = "thank you lord!", speaker = "mc"}
             },
             message_box_frame = 0,
             new_scene = true
@@ -77,7 +77,7 @@ function cutscene_update(s)
         s.new_scene = false
         s.message_box_frame = 0
     end
-    if s.new_scene == false and btnp(❎) or btnp(🅾️) then
+    if s.new_scene == false and (btnp(❎) or btnp(🅾️)) then
         if dialog_i < #s.messages then
             s.message_box_frame = 0
             dialog_i+=1
@@ -122,12 +122,12 @@ end
 
 -- title screen init
 function title_init()
-    
+    music(-1)
 end
 
 -- title screen update
 function title_update()
-    if btn(❎) or btn(🅾️) then
+    if btnp(❎) or btnp(🅾️) then
         return true
     else
         return false
@@ -137,8 +137,8 @@ end
 -- title screen draw
 function title_draw()
     cls()
-    title = "surely you jest!" --16 characters
-    for i = 1, 16 do
+    title = "surely, you jest!" --16 characters
+    for i = 1, 17 do
         t1 = time()*30 + i*4
         
         title_x = 30 + i*4 + cos(t1/120)*3
