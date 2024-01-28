@@ -3,6 +3,8 @@ function ball_init()
     iswin=false,
     islose=false,
 
+    anglelimit={-0.08,0.08},
+
     balllist = {},
     health=3,
     time_limit=60,
@@ -32,6 +34,7 @@ function ball_init()
       {time=10,  action="throw"},
       {time=18,  action="laugh"},
       {time=20,  action="throw"},
+      {time=60,  action="win"},
     },
 
     distance
@@ -76,7 +79,15 @@ function ball_init()
   state.islose=true
   print("you lose",50,50,7)
   end
-  
+
+  function inanglelimit(state)
+    printh(state.angle..state.anglelimit[1]..state.anglelimit[2],"testangle")
+    if state.angle>state.anglelimit[1] and state.angle<state.anglelimit[2] then
+      return true
+    else
+      return false
+    end
+  end
 
 
 
@@ -104,10 +115,20 @@ function ball_init()
 
     if btn(0) then
         state.angle-=state.paddle_rotatespeed
+
+        if inanglelimit(state)==false then
+          state.angle+=state.paddle_rotatespeed
+        end
+
         state.center_x -= state.paddle_speed
         state.turningleft=true
     elseif btn(1) then
       state.angle+=state.paddle_rotatespeed
+
+      if inanglelimit(state)==false then
+        state.angle-=state.paddle_rotatespeed
+      end
+
       state.center_x += state.paddle_speed
       state.turningleft=false
 
@@ -115,8 +136,14 @@ function ball_init()
 
     elseif btn(4) then
       state.angle+=state.paddle_rotatespeed
+      if inanglelimit(state)==false then
+        state.angle-=state.paddle_rotatespeed
+      end
       elseif btn(5) then 
-        state.angle-=state.paddle_rotatespeed	    
+        state.angle-=state.paddle_rotatespeed	   
+        if inanglelimit(state)==false then
+          state.angle+=state.paddle_rotatespeed
+        end 
     end
     
 
@@ -125,6 +152,8 @@ function ball_init()
 
   function ball_draw(state)
     map()
+
+
 
 
     if state.health<0 then 
@@ -199,12 +228,12 @@ function ball_init()
 
 
 
-    if state.distance <8
+    if state.distance <13
     and x >= min(state.center_x-state.line_length* cos(state.angle),state.center_x+state.line_length* cos(state.angle))-2
     and x <= max(state.center_x-state.line_length* cos(state.angle),state.center_x+state.line_length* cos(state.angle))-2
     then
     local distanceneed
-    distanceneed=9-state.distance
+    distanceneed=13-state.distance
         y -= distanceneed*cos(state.angle)
         x	-=	distanceneed*sin(state.angle)
       
@@ -246,6 +275,10 @@ function ball_init()
 
 		vx=vparalle*cos(angle)-vperpendicular*sin(angle)
 		vy=vparalle*sin(angle)+vperpendicular*cos(angle)
+
+    if vy>-2 then
+      vy=-3
+    end
     return vx,vy
 
 		end
