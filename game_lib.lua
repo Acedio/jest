@@ -1,12 +1,13 @@
 function ball_init()
+  local time_limit = 40
   local state = {
     iswin=false,
     islose=false,
 
     balllist = {},
     health=3,
-    time_limit=60,
     ball_limit=3; 
+    time_limit=time_limit,
     center_x = 64,
     center_y = 90,
     line_length = 20,
@@ -26,14 +27,15 @@ function ball_init()
     angle=0,
 
     events = {
-      {time=0, action="throw"},
+      {time=0, action="laugh"},
       {time=1, action="throw"},
-      {time=2, action="throw"},
+      {time=3, action="laugh"},
+      {time=4, action="throw"},
       {time=8,  action="laugh"},
-      {time=10,  action="throw"},
-      {time=18,  action="laugh"},
+      {time=9,  action="throw"},
+      {time=19,  action="laugh"},
       {time=20,  action="throw"},
-      {time=60, action="win"},
+      {time=time_limit, action="win"},
     },
 
     object_types = {
@@ -218,7 +220,7 @@ function ball_init()
       spr(30+2*o.object_type,o.ballx,o.bally,2,2)
     end)
 
-    draw_heart(state)
+    draw_ui(state)
 
     local x1, y1, x2, y2 = update_line_endpoints(state)
     if state.turningleft==true then
@@ -260,6 +262,7 @@ function ball_init()
         
     local good_object = state.object_types[ballstate.object_type].good
     if y>90 then
+      del(state.balllist,ballstate)
       if good_object then 
         state.health-=1
         y=90
@@ -268,7 +271,6 @@ function ball_init()
         sfx(2)
         ballstateStr="drop_ground"
       else
-        del(state.balllist,ballstate)
         sfx(17)
         ballstateStr="badthings_drop_ground"
       end
@@ -332,8 +334,10 @@ function ball_init()
 
 		end
 
-    function draw_heart(state)
+    function draw_ui(state)
       for i=1,state.health do
-    spr(73,85+i*8,10) 
+        spr(73,85+i*8,20) 
+      end
+      rectfill(85, 13, 118, 19, 14)
+      print("time: " .. state.time_limit - state.counter\30, 86, 14, 7)
     end
-   end
