@@ -87,7 +87,7 @@ function ball_init()
     --audience
     palt(0x0080)
     for i=0,7 do
-      spr(104+2*(i%4),i*16,112,2,2)
+      spr(104+2*(i%4),i*16,112+3+3*sin((s.t+10*i)/50),2,2)
     end
     --curtains
     for i=0,2 do
@@ -129,14 +129,6 @@ function ball_init()
   function win()
   end
 
-  function lose(state)
-  state.islose=true
-  print("you lose",50,50,7)
-  end
-  
-
-
-
 
   function ball_update(state)
     decideWhatToDo(state) 
@@ -154,10 +146,9 @@ function ball_init()
 
     end)
 
-    foreach(ballstatelist, function(o)
-      printh(o,"test.txt")
+    if state.health<=0 then 
+      state.islose=true
     end
-    )
 
     if btn(0) then
         state.angle-=state.paddle_rotatespeed
@@ -183,13 +174,14 @@ function ball_init()
   end
 
   function ball_draw(state)
+    palt(0)
     map()
     audience_draw(state.audience_state)
     king_draw(state.king_state)
 
 
-    if state.health<0 then 
-      lose(state)
+    if state.islose then
+      print("you lose",50,50,7)
     end
 
 
@@ -261,12 +253,12 @@ function ball_init()
 
 
 
-    if state.distance <8
+    if state.distance <13
     and x >= min(state.center_x-state.line_length* cos(state.angle),state.center_x+state.line_length* cos(state.angle))-2
     and x <= max(state.center_x-state.line_length* cos(state.angle),state.center_x+state.line_length* cos(state.angle))-2
     then
     local distanceneed
-    distanceneed=9-state.distance
+    distanceneed=14-state.distance
         y -= distanceneed*cos(state.angle)
         x	-=	distanceneed*sin(state.angle)
       
