@@ -1,30 +1,87 @@
 function ball_init()
   local state = {
     balllist = {},
+    health=3,
+    time_limit=60,
+    ball_limit=3; 
     center_x = 64,
-    center_y = 80,
+    center_y = 90,
     line_length = 20,
     gravity = 0.1,
     bounce = -1,
-    counter = 1,
-    interval = 1 * 30 ,
-    paddle_speed=1,
+    counter = 0,
+    interval = 5 * 30 ,
+    paddle_speed=2.5,
+
+    turningleft=false,
+
+    paddle_rotatespeed=0.002,
+  
+    score=0,
+
     angle=0,
+
+    events = {
+      {time=0, action="throw"},
+      {time=1, action="throw"},
+      {time=2, action="throw"},
+      {time=8,  action="laugh"},
+      {time=10,  action="throw"},
+      {time=18,  action="laugh"},
+      {time=20,  action="throw"},
+    },
 
     distance
   }
   return state
   end
 
+  function decideWhatToDo(state)
+    foreach(state.events, function(event)
+      if  state.counter==event.time*30 then 
+          local action = event.action
+          if action=="throw" then 
+            throw(state)
+            elseif action=="laugh" then
+              kinglaugh(state)
+          end
+        end
+      end)
+  end
+
+  function throw(state)
+    local num= flr(rnd(3))
+    if num!=1 then
+      add(state.balllist, {ballx=1,bally=1,ballvx=1,ballvy=0,isegg=false})
+    else
+      add(state.balllist, {ballx=1,bally=1,ballvx=1,ballvy=0,isegg=true})
+    end
+  end
+
+
+  function kinglaugh(state)
+
+  end
+
+  function ball_drop(state)
+  end
+
+  function win()
+  end
+
+  function lose()
+  print("you lose",50,50,7)
+  end
+
+
+
   function ball_update(state)
+    decideWhatToDo(state) 
     state.counter+=1
-    if state.counter >= state.interval then
-        add(state.balllist, {ballx=1,bally=1,ballvx=1,ballvy=0})
-        state.counter = 0
-    end    
+
     foreach(state.balllist, function(o)
         o.ballx,o.bally,o.ballvx,o.ballvy
-        =ball(o.ballx,o.bally,o.ballvx,o.ballvy,state)
+        =ball(o.ballx,o.bally,o.ballvx,o.ballvy,o,state)
     end)
 
 
@@ -32,15 +89,20 @@ function ball_init()
 
         
     if btn(0) then
-        state.angle-=0.01
+        state.angle-=state.paddle_rotatespeed
         state.center_x -= state.paddle_speed
+        state.turningleft=true
     elseif btn(1) then
-      state.angle+=0.01
+      state.angle+=state.paddle_rotatespeed
       state.center_x += state.paddle_speed
+      state.turningleft=false
+
+
+
     elseif btn(4) then
-      state.angle+=0.01
+      state.angle+=state.paddle_rotatespeed
       elseif btn(5) then 
-        state.angle-=0.01			    
+        state.angle-=state.paddle_rotatespeed	    
     end
     
 
@@ -48,13 +110,29 @@ function ball_init()
   end
 
   function ball_draw(state)
-    cls()             
-    
+    map()
+
+    if state.health<0 then 
+      lose()
+    end
+
+
+    draw_heart(state)
     foreach(state.balllist, function(o)
-        spr(1,o.ballx,o.bally)
+      if o.isegg==false then
+        spr(44,o.ballx,o.bally,2,2)
+      else 
+        spr(40,o.ballx,o.bally,2,2)
+      end
     end)
 
     local x1, y1, x2, y2 = update_line_endpoints(state)
+    if state.turningleft==true then
+    spr(12,state.center_x-8,state.center_y,2,2)
+    else 
+      spr(14,state.center_x-8,state.center_y,2,2)
+    end
+
     line(x1, y1, x2, y2, 7)
     
   end
@@ -71,7 +149,7 @@ function ball_init()
       return end_x1, end_y1, end_x2, end_y2
   end
 
-  function ball(x,y,vx,vy,state)  
+  function ball(x,y,vx,vy,ballstate,state)  
     vy += state.gravity 
     y += vy     
         
@@ -85,25 +163,42 @@ function ball_init()
     end
         
         
-        if y>90 then 
-        y=90
-        vy*=-1
+        if y>90 and ballstate.isegg==false then 
+          state.health-=1
+          y=90
+          vy*=-1
+        elseif y>90 and ballstate.isegg==true then
+          del(state.balllist,ballstate)
+
         end
         
         x+=vx
         count_distance(x,y,state)
-    if state.distance <12
-    and x >= min(state.center_x-state.line_length* cos(state.angle),state.center_x+state.line_length* cos(state.angle))
-    and x <= max(state.center_x-state.line_length* cos(state.angle),state.center_x+state.line_length* cos(state.angle))
+
+
+
+    if state.distance <8
+    and x >= min(state.center_x-state.line_length* cos(state.angle),state.center_x+state.line_length* cos(state.angle))-2
+    and x <= max(state.center_x-state.line_length* cos(state.angle),state.center_x+state.line_length* cos(state.angle))-2
     then
     local distanceneed
-    distanceneed=13-state.distance
+    distanceneed=9-state.distance
         y -= distanceneed*cos(state.angle)
         x	-=	distanceneed*sin(state.angle)
-    
+      
+      if ballstate.isegg==false then
         vx,vy=countcollision(vx,vy,state.angle)
-    end
+        state.score+=1
+      else 
+        state.health-=1
+        state.score-=5
+        del(state.balllist,ballstate)
+      end
 
+        
+
+    end
+    
     return x,y,vx,vy
     
   end
@@ -129,3 +224,9 @@ function ball_init()
     return vx,vy
 
 		end
+
+    function draw_heart(state)
+      for i=1,state.health do
+    spr(73,85+i*8,10) 
+    end
+   end  
