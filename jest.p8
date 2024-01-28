@@ -1,7 +1,7 @@
 pico-8 cartridge // http://www.pico-8.com
 version 41
 __lua__
--- surely, you jest!
+-- surely you jest!
 -- by black bear roll
 #include game_lib.lua
 #include cutscene_lib.lua

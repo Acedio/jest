@@ -77,7 +77,7 @@ function cutscene_update(s)
         s.new_scene = false
         s.message_box_frame = 0
     end
-    if s.new_scene == false and btnp(❎) or btnp(🅾️) then
+    if s.new_scene == false and (btnp(❎) or btnp(🅾️)) then
         if dialog_i < #s.messages then
             s.message_box_frame = 0
             dialog_i+=1
