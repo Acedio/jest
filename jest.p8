@@ -40,9 +40,23 @@ function _update()
  elseif state == "game" then
    local status = ball_update(ball_state)
    if status == "win" then
-     -- init win cutscene and swtich
+   -- win the game
+     local sub_status = cutscene_update(cutscene_state)
+     state = "cutscene"
+     cutscene_state = win_init()
+     if sub_status == true then
+      state = "title"
+      title_init()
+     end
    elseif status == "lose" then
-     -- init lose cutscene and switch
+     -- lose the game
+     state = "cutscene"
+     cutscene_state = lose_init()
+     local sub_status = cutscene_update(cutscene_state)
+     if sub_status == true then
+      state = "game"
+      ball_state = ball_init()
+     end
    end
  elseif state == "cutscene" then
    local status = cutscene_update(cutscene_state)
