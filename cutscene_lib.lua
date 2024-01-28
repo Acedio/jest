@@ -30,9 +30,9 @@ function intro_init()
     music(0, 1000) -- start cutscene music
     return {
         messages = {
-                {message = "welcome new jester. \ni have brought you from the \nfuture to entertain me.\n\nnow juggle!\njuggle like your life \ndepends on it!", speaker = "king"},
+                {message = "welcome new jester. \ni have brought you from the \nfuture to entertain me.\n\nnow juggle my trinkets!\njuggle like your life \ndepends on it!", speaker = "king"},
                 {message = "wait, what? i have a \npresentation due today! \n\nand a nomikai tonight!", speaker = "mc"},
-                {message = "caper for me fool! \n\nheads up! \ndrop it and i drop you!", speaker = "king"},
+                {message = "caper for me fool! \n\nheads up! \ndrop them and i drop you!", speaker = "king"},
             },
             message_box_frame = 0,
             new_scene = true
@@ -77,14 +77,15 @@ function cutscene_update(s)
         s.new_scene = false
         s.message_box_frame = 0
     end
-    if s.new_scene == false and btnp(4) or btnp(5) then
+    if s.new_scene == false and btnp(❎) or btnp(🅾️) then
         if dialog_i < #s.messages then
             s.message_box_frame = 0
             dialog_i+=1
         else
-            -- return change state to game mode
+            return true
         end
     end
+    return false
 end
 
 
