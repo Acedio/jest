@@ -45,14 +45,14 @@ function ball_init()
     rethrow_delay_start=rethrow_delay_start,
 
     object_types = {
-      {good=true},
-      {good=true},
-      {good=true},
-      {good=false},
-      {good=false},
-      {good=true},
-      {good=true},
-      {good=true},
+      "good",
+      "potion",
+      "good",
+      "bad",
+      "bad",
+      "good",
+      "good",
+      "good",
     },
 
     audience_state=audience_init(),
@@ -139,6 +139,7 @@ function ball_init()
 
   function throw(state)
     local object = flr(rnd(8)) + 1
+    sfx(23)
 		add(state.balllist, {ballx=1,bally=1,ballvx=1,ballvy=0,object_type=object})
   end
 
@@ -294,11 +295,11 @@ function ball_init()
         vx*=-1            
     end
         
-    local good_object = state.object_types[ballstate.object_type].good
+    local object_type = state.object_types[ballstate.object_type]
     if y>90 then
       del(state.balllist,ballstate)
       state.rethrow_count += 1
-      if good_object then 
+      if object_type == "good" then 
         state.health-=1
         y=90
         vy*=-1
@@ -325,14 +326,19 @@ function ball_init()
         y -= distanceneed*cos(state.angle)
         x	-=	distanceneed*sin(state.angle)
       
-      if good_object then
+      if object_type == "good" then
         vx,vy=countcollision(vx,vy,state.angle)
         state.score+=1
         sfx(1)
         ballstateStr="collision"
       else 
-        state.health-=1
-        state.score-=5
+        if object_type == "potion" then
+          state.paddle_speed += 1.5
+        else
+          -- bad thing
+          state.health-=1
+          state.score-=5
+        end
         del(state.balllist,ballstate)
         sfx(17)
         state.rethrow_count += 1
