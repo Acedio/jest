@@ -254,4 +254,4 @@ function ball_init()
       for i=1,state.health do
     spr(73,85+i*8,10) 
     end
-   end  
+   end
