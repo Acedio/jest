@@ -45,7 +45,7 @@ function win_init()
     music(2, 1000) -- start win music
     return {
         messages = {
-                {message = "enough! \ncongratulations, you have \nimpressed me", speaker = "king"},
+                {message = "enough! \ncongratulations, you have \nimpressed me.", speaker = "king"},
                 {message = "does this mean i can go back \nhome to my own time now?", speaker = "mc"},
                 {message = "proposterous! \ni want to throw more things \nat you tomorrow too! \n\ntake him away!", speaker = "king"},
                 {message = "noooooooooo!", speaker = "mc"}
@@ -61,7 +61,7 @@ function lose_init()
     music(0, 1000) -- start cutscene music
     return {
         messages = {
-                {message = "future man, \nyour skills are as sharp as a \nwooden spoon \n\nmy disappointment is \nimmeasurable", speaker = "king"},
+                {message = "future man, \nyour skills are as sharp as a \nwooden spoon. \n\nmy disappointment is \nimmeasurable.", speaker = "king"},
                 {message = "forgive me my liege, \ngive me another chance!", speaker = "mc"},
                 {message = "fine \n\ni'll let you try once more\ndon't let me down!", speaker = "king"},
                 {message = "thank you lord!", speaker = "mc"}
