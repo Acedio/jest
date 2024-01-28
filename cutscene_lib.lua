@@ -122,12 +122,12 @@ end
 
 -- title screen init
 function title_init()
-    
+    music(-1)
 end
 
 -- title screen update
 function title_update()
-    if btn(❎) or btn(🅾️) then
+    if btnp(❎) or btnp(🅾️) then
         return true
     else
         return false
@@ -137,8 +137,8 @@ end
 -- title screen draw
 function title_draw()
     cls()
-    title = "surely you jest!" --16 characters
-    for i = 1, 16 do
+    title = "surely, you jest!" --16 characters
+    for i = 1, 17 do
         t1 = time()*30 + i*4
         
         title_x = 30 + i*4 + cos(t1/120)*3

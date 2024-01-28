@@ -1,7 +1,7 @@
 pico-8 cartridge // http://www.pico-8.com
 version 41
 __lua__
--- surely you jest!
+-- surely, you jest!
 -- by black bear roll
 #include game_lib.lua
 #include cutscene_lib.lua
@@ -42,27 +42,24 @@ function _update()
    if status == "win" then
    -- win the game
      local sub_status = cutscene_update(cutscene_state)
-     state = "cutscene"
+     state = "win"
      cutscene_state = win_init()
-     if sub_status == true then
-      state = "title"
-      title_init()
-     end
    elseif status == "lose" then
      -- lose the game
      state = "cutscene"
      cutscene_state = lose_init()
-     local sub_status = cutscene_update(cutscene_state)
-     if sub_status == true then
-      state = "game"
-      ball_state = ball_init()
-     end
    end
  elseif state == "cutscene" then
    local status = cutscene_update(cutscene_state)
    if status == true then
     state = "game"
     ball_state = ball_init()
+   end
+ elseif state == "win" then
+  local status = cutscene_update(cutscene_state)
+   if status == true then
+    state = "title"
+    title_init()
    end
  else
    -- die
@@ -79,6 +76,8 @@ function _draw()
   elseif state == "game" then
     ball_draw(ball_state)
   elseif state == "cutscene" then
+    cutscene_draw(cutscene_state)
+  elseif state == "win" then
     cutscene_draw(cutscene_state)
   else
     -- die
