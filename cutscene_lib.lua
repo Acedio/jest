@@ -64,7 +64,7 @@ function lose_init()
         messages = {
                 {message = "future man, \nyour skills are as sharp as a \nwooden spoon \n\nmy disappointment is \nimmeasurable", speaker = "king"},
                 {message = "forgive me my liege, \ngive me another chance!", speaker = "mc"},
-                {message = "fine \n\ni'll let you try once more\ndon't disappoint me!", speaker = "king"},
+                {message = "fine \n\ni'll let you try once more\ndon't let me down!", speaker = "king"},
                 {message = "thank you lord!", speaker = "mc"}
             },
             message_box_frame = 0,
