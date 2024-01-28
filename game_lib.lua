@@ -19,6 +19,7 @@ function ball_init()
     turningleft=false,
 
     paddle_rotatespeed=0.002,
+    anglelimit={-0.08,0.08},
   
     score=0,
 
@@ -32,6 +33,18 @@ function ball_init()
       {time=10,  action="throw"},
       {time=18,  action="laugh"},
       {time=20,  action="throw"},
+      {time=60, action="win"},
+    },
+
+    object_types = {
+      {good=true},
+      {good=true},
+      {good=true},
+      {good=false},
+      {good=false},
+      {good=true},
+      {good=true},
+      {good=true},
     },
 
     audience_state=audience_init(),
@@ -46,22 +59,27 @@ function ball_init()
   function king_init()
     return {
       t = 0,
+      laugh_t = 127,
       x = 64-8,
       y = 32,
     }
   end
 
+  function king_laugh(s)
+    sfx(0)
+    s.laugh_t = 0
+  end
+
   function king_update(s)
     s.t += 1
-    if band(s.t, 127) == 0 then
-      sfx(0)
+    if s.laugh_t < 127 then
+      s.laugh_t += 1
     end
   end
 
   function king_draw(s)
     palt(0x0010)
-    local laugh = band(s.t,127)
-    if laugh > 6 and laugh < 32 then
+    if s.laugh_t > 6 and s.laugh_t < 32 then
       if band(s.t, 2) == 0 then
         spr(6, s.x, s.y, 2, 2)
       else
@@ -97,37 +115,31 @@ function ball_init()
   end
 
   function decideWhatToDo(state)
-    foreach(state.events, function(event)
-      if  state.counter==event.time*30 then 
-          local action = event.action
+    for i=1,#state.events do
+      if  state.counter==state.events[i].time*30 then 
+          local action = state.events[i].action
           if action=="throw" then 
             throw(state)
-            elseif action=="laugh" then
-              kinglaugh(state)
+          elseif action=="laugh" then
+            king_laugh(state.king_state)
+          elseif action=="win" then
+            state.iswin = true
           end
         end
-      end)
+      end
   end
 
   function throw(state)
-    local num= flr(rnd(3))
-    if num!=1 then
-      --isegg means it is bad and should be dropped.
-      add(state.balllist, {ballx=1,bally=1,ballvx=1,ballvy=0,isegg=false})
+    local object = flr(rnd(8)) + 1
+		add(state.balllist, {ballx=1,bally=1,ballvx=1,ballvy=0,object_type=object})
+  end
+
+ function inanglelimit(state)
+    if state.angle>state.anglelimit[1] and state.angle<state.anglelimit[2] then
+      return true
     else
-      add(state.balllist, {ballx=1,bally=1,ballvx=1,ballvy=0,isegg=true})
+      return false
     end
-  end
-
-
-  function kinglaugh(state)
-
-  end
-
-  function ball_drop(state)
-  end
-
-  function win()
   end
 
 
@@ -151,12 +163,22 @@ function ball_init()
       state.islose=true
     end
 
-    if btn(0) then
+		if btn(0) then
         state.angle-=state.paddle_rotatespeed
+
+        if inanglelimit(state)==false then
+          state.angle+=state.paddle_rotatespeed
+        end
+
         state.center_x -= state.paddle_speed
         state.turningleft=true
     elseif btn(1) then
       state.angle+=state.paddle_rotatespeed
+
+      if inanglelimit(state)==false then
+        state.angle-=state.paddle_rotatespeed
+      end
+
       state.center_x += state.paddle_speed
       state.turningleft=false
 
@@ -164,8 +186,14 @@ function ball_init()
 
     elseif btn(4) then
       state.angle+=state.paddle_rotatespeed
+      if inanglelimit(state)==false then
+        state.angle-=state.paddle_rotatespeed
+      end
       elseif btn(5) then 
-        state.angle-=state.paddle_rotatespeed	    
+        state.angle-=state.paddle_rotatespeed
+        if inanglelimit(state)==false then
+          state.angle+=state.paddle_rotatespeed
+        end 
     end
 
     king_update(state.king_state)
@@ -187,11 +215,7 @@ function ball_init()
 
 
     foreach(state.balllist, function(o)
-      if o.isegg==false then
-        spr(44,o.ballx,o.bally,2,2)
-      else 
-        spr(40,o.ballx,o.bally,2,2)
-      end
+      spr(30+2*o.object_type,o.ballx,o.bally,2,2)
     end)
 
     draw_heart(state)
@@ -234,25 +258,24 @@ function ball_init()
         vx*=-1            
     end
         
-        
-        if y>90 and ballstate.isegg==false then 
-          state.health-=1
-          y=90
-          vy*=-1
+    local good_object = state.object_types[ballstate.object_type].good
+    if y>90 then
+      if good_object then 
+        state.health-=1
+        y=90
+        vy*=-1
 
-          sfx(2)
-          ballstateStr="drop_ground"
-
-        elseif y>90 and ballstate.isegg==true then
-          del(state.balllist,ballstate)
-          sfx(17)
-          ballstateStr="badthings_drop_ground"
-
-
-        end
-        
-        x+=vx
-        count_distance(x,y,state)
+        sfx(2)
+        ballstateStr="drop_ground"
+      else
+        del(state.balllist,ballstate)
+        sfx(17)
+        ballstateStr="badthings_drop_ground"
+      end
+    end
+    
+    x+=vx
+    count_distance(x,y,state)
 
 
 
@@ -265,7 +288,7 @@ function ball_init()
         y -= distanceneed*cos(state.angle)
         x	-=	distanceneed*sin(state.angle)
       
-      if ballstate.isegg==false then
+      if good_object then
         vx,vy=countcollision(vx,vy,state.angle)
         state.score+=1
         sfx(1)
