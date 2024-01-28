@@ -26,6 +26,8 @@ end
 
 function intro_init()
     dialog_i = 1 -- each button press progresses to the next dialog
+    music(-1)
+    music(0, 1000) -- start cutscene music
     return {
         messages = {
                 {message = "welcome new jester. \ni have brought you from the \nfuture to entertain me.\n\nnow juggle!\njuggle like your life \ndepends on it!", speaker = "king"},
@@ -33,12 +35,14 @@ function intro_init()
                 {message = "caper for me fool! \n\nheads up! \ndrop it and i drop you!", speaker = "king"},
             },
             message_box_frame = 0,
-            new_scene = true,
+            new_scene = true
     }
 end
 
 function win_init()
     dialog_i = 1 -- each button press progresses to the next dialog
+    music(-1)
+    music(2, 1000) -- start win music
     return {
         messages = {
                 {message = "enough! \ncongratulations, you have \nimpressed me", speaker = "king"},
@@ -47,12 +51,14 @@ function win_init()
                 {message = "noooooooooo!", speaker = "mc"}
             },
             message_box_frame = 0,
-            new_scene = true,
+            new_scene = true
     }
 end
 
 function lose_init()
     dialog_i = 1 -- each button press progresses to the next dialog
+    music(-1)
+    music(0, 1000) -- start cutscene music
     return {
         messages = {
                 {message = "future man, \nyour skills are as sharp as a \nwooden spoon \n\nmy disappointment is \nimmeasurable", speaker = "king"},
@@ -61,7 +67,7 @@ function lose_init()
                 {message = "noooooooooo!", speaker = "mc"}
             },
             message_box_frame = 0,
-            new_scene = true,
+            new_scene = true
     }
 end
 
