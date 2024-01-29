@@ -1,10 +1,11 @@
-![Box art](boxart.png)
-
 # Surely, You Jest!
+
+![Box art](boxart.png | width=500)
 
 A game made by Team Black Bear Roll for Global Game Jam 2024!!
 
 [Jam Link](https://globalgamejam.org/games/2024/surely-you-jest-0)
+
 [Play Now! (Pico-8 Web Version)](https://www.lexaloffle.com/bbs/?pid=140801)
 
 ### Gameplay
