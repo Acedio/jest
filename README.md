@@ -1,6 +1,6 @@
 # Surely, You Jest!
 
-![Box art](boxart.png | width=500)
+<img src="boxart.png" width=400/>
 
 A game made by Team Black Bear Roll for Global Game Jam 2024!!
 
